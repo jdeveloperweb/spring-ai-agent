@@ -1,0 +1,89 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: spring-ai-agent
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/agent_db}
+    username: ${DATABASE_USER:agent_user}
+    password: ${DATABASE_PASS:agent_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:demo-key}
+      chat:
+        model: ${OPENAI_MODEL:gpt-4o-mini}
+        temperature: 0.7
+        max-tokens: 2000
+        top-p: 1.0
+      embedding:
+        model: text-embedding-3-small
+
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.company.agent: DEBUG
+    org.springframework.ai: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%X{tenant}] %logger{36} - %msg%n"
+
+agent:
+  security:
+    api-keys:
+      - key: "dev-token"
+        tenant: "default"
+        name: "Development Key"
+      - key: "prod-token"
+        tenant: "production"
+        name: "Production Key"
+
+  execution:
+    default-timeout: PT5M
+    max-concurrent-tasks: 10
+
+  rag:
+    similarity-threshold: 0.75
+    top-k: 6

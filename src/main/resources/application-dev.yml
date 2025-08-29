@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agent_db
+    username: agent_user
+    password: agent_pass
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    clean-disabled: false
+
+logging:
+  level:
+    com.company.agent: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+agent:
+  security:
+    api-keys:
+      - key: "dev-token"
+        tenant: "default"
+        name: "Development Key"
+      - key: "test-token"
+        tenant: "test"
+        name: "Test Key"
+
+  execution:
+    default-timeout: PT2M
+    max-concurrent-tasks: 5
