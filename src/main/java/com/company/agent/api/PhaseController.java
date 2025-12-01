@@ -40,7 +40,7 @@ public class PhaseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PhaseContextDto> getPhase(@PathVariable UUID id) {
+    public ResponseEntity<PhaseDto> getPhase(@PathVariable UUID id) {
         Phase phase = phaseManager.getPhase(id);
         return ResponseEntity.ok(PhaseDto.fromDomain(phase));
     }

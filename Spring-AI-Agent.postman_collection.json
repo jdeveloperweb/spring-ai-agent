@@ -1,0 +1,850 @@
+{
+  "info": {
+    "name": "Spring AI Agent API",
+    "description": "Collection completa para testar a API do Spring AI Agent\n\n## Variáveis de Ambiente\n\n- `baseUrl`: URL base da API (default: http://localhost:8080)\n- `apiKey`: Chave de API para autenticação (default: dev-token)\n- `flowId`: ID do flow criado (auto-preenchido após criar flow)\n- `taskId`: ID da task criada (auto-preenchido após criar task)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "dev-token",
+      "type": "string"
+    },
+    {
+      "key": "flowId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "phaseId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Verifica o status da aplicação"
+          }
+        },
+        {
+          "name": "Application Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "info"]
+            },
+            "description": "Retorna informações sobre a aplicação"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Criar Task Simples (Síncrona)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 202) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('taskId', jsonData.id);",
+                  "    pm.test('Task criada com sucesso', function () {",
+                  "        pm.expect(jsonData.id).to.not.be.null;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Analise o sentimento dos últimos 10 reviews do produto XYZ e forneça um resumo\",\n  \"mode\": \"AUTONOMOUS\",\n  \"sync\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Cria e executa uma task de forma síncrona"
+          }
+        },
+        {
+          "name": "Criar Task Assíncrona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('taskId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Faça uma pesquisa de preços de notebooks de alta performance em diferentes lojas online\",\n  \"mode\": \"AUTONOMOUS\",\n  \"sync\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Cria uma task que será executada de forma assíncrona"
+          }
+        },
+        {
+          "name": "Criar Task com Flow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Verificar logs de erro do cliente e identificar a causa raiz do problema\",\n  \"mode\": \"AUTONOMOUS\",\n  \"flowId\": \"{{flowId}}\",\n  \"sync\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Cria uma task associada a um flow específico"
+          }
+        },
+        {
+          "name": "Buscar Task por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}"]
+            },
+            "description": "Busca uma task específica pelo ID"
+          }
+        },
+        {
+          "name": "Listar Todas as Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Lista todas as tasks do tenant"
+          }
+        },
+        {
+          "name": "Listar Tasks por Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?status=SUCCEEDED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "SUCCEEDED",
+                  "description": "PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLED"
+                }
+              ]
+            },
+            "description": "Lista tasks filtradas por status"
+          }
+        },
+        {
+          "name": "Listar Tasks por Flow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?flowId={{flowId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "flowId",
+                  "value": "{{flowId}}"
+                }
+              ]
+            },
+            "description": "Lista todas as tasks de um flow específico"
+          }
+        },
+        {
+          "name": "Executar Task Pendente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "execute"]
+            },
+            "description": "Executa uma task que está com status PENDING"
+          }
+        },
+        {
+          "name": "Cancelar Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}", "cancel"]
+            },
+            "description": "Cancela uma task em execução"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flows",
+      "item": [
+        {
+          "name": "Criar Flow",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('flowId', jsonData.id);",
+                  "    pm.test('Flow criado com sucesso', function () {",
+                  "        pm.expect(jsonData.id).to.not.be.null;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Atendimento Cliente #12345\",\n  \"description\": \"Processo de suporte técnico para problema de autenticação\",\n  \"initialPhase\": \"TRIAGEM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/flows",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows"]
+            },
+            "description": "Cria um novo flow começando na fase inicial especificada"
+          }
+        },
+        {
+          "name": "Buscar Flow por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/flows/{{flowId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows", "{{flowId}}"]
+            },
+            "description": "Busca um flow específico pelo ID"
+          }
+        },
+        {
+          "name": "Listar Todos os Flows",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/flows",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows"]
+            },
+            "description": "Lista todos os flows do tenant"
+          }
+        },
+        {
+          "name": "Avançar Flow para Próxima Fase",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"ANALISE\",\n  \"guardVars\": {\n    \"triagem_completa\": true,\n    \"prioridade_definida\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/flows/{{flowId}}:advance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows", "{{flowId}}:advance"]
+            },
+            "description": "Avança o flow para a próxima fase, opcionalmente com variáveis de guarda"
+          }
+        },
+        {
+          "name": "Configurar Contexto de Fase",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variables\": {\n    \"cliente_id\": \"12345\",\n    \"tipo_problema\": \"autenticacao\",\n    \"prioridade\": \"alta\"\n  },\n  \"toolPolicy\": {\n    \"allow\": [\"http\", \"database\"],\n    \"deny\": [\"email\"],\n    \"allowDomains\": [\n      \"https://api.internal.com\"\n    ]\n  },\n  \"ragFilter\": \"category == 'technical_support' && priority == 'high'\",\n  \"systemPromptTemplate\": \"Você está na fase de TRIAGEM. Analise o problema do cliente {{cliente_id}} com prioridade {{prioridade}}. Use ferramentas de banco de dados para verificar histórico.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/flows/{{flowId}}/phases/TRIAGEM",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows", "{{flowId}}", "phases", "TRIAGEM"]
+            },
+            "description": "Configura ou atualiza o contexto de uma fase específica do flow"
+          }
+        },
+        {
+          "name": "Buscar Contexto de Fase",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/flows/{{flowId}}/phases/TRIAGEM",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows", "{{flowId}}", "phases", "TRIAGEM"]
+            },
+            "description": "Retorna o contexto de uma fase específica"
+          }
+        },
+        {
+          "name": "Listar Todos os Contextos do Flow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/flows/{{flowId}}/phases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flows", "{{flowId}}", "phases"]
+            },
+            "description": "Lista todos os contextos de fases do flow"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phases",
+      "item": [
+        {
+          "name": "Criar Fase (Catálogo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('phaseId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TRIAGEM\",\n  \"description\": \"Fase inicial de triagem e classificação da solicitação\",\n  \"category\": \"CUSTOMER_SERVICE\",\n  \"orderIndex\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/phases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases"]
+            },
+            "description": "Cria uma nova fase no catálogo de fases disponíveis"
+          }
+        },
+        {
+          "name": "Buscar Fase por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/{{phaseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "{{phaseId}}"]
+            },
+            "description": "Busca uma fase específica pelo ID"
+          }
+        },
+        {
+          "name": "Buscar Fase por Nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/name/TRIAGEM",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "name", "TRIAGEM"]
+            },
+            "description": "Busca uma fase pelo nome"
+          }
+        },
+        {
+          "name": "Listar Todas as Fases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases"]
+            },
+            "description": "Lista todas as fases do tenant"
+          }
+        },
+        {
+          "name": "Listar Fases por Categoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases?category=CUSTOMER_SERVICE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "CUSTOMER_SERVICE"
+                }
+              ]
+            },
+            "description": "Lista fases filtradas por categoria"
+          }
+        },
+        {
+          "name": "Listar Fases Ativas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases?status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                }
+              ]
+            },
+            "description": "Lista apenas fases ativas"
+          }
+        },
+        {
+          "name": "Atualizar Fase",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Fase inicial de triagem, classificação e priorização da solicitação\",\n  \"category\": \"CUSTOMER_SERVICE\",\n  \"orderIndex\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/{{phaseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "{{phaseId}}"]
+            },
+            "description": "Atualiza uma fase existente"
+          }
+        },
+        {
+          "name": "Ativar Fase",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/{{phaseId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "{{phaseId}}", "activate"]
+            },
+            "description": "Ativa uma fase que estava inativa"
+          }
+        },
+        {
+          "name": "Desativar Fase",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/{{phaseId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "{{phaseId}}", "deactivate"]
+            },
+            "description": "Desativa uma fase"
+          }
+        },
+        {
+          "name": "Deletar Fase",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/{{phaseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "{{phaseId}}"]
+            },
+            "description": "Deleta uma fase do catálogo"
+          }
+        },
+        {
+          "name": "Verificar Transição de Fase",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/phases/transitions?from=TRIAGEM&to=ANALISE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "phases", "transitions"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "TRIAGEM"
+                },
+                {
+                  "key": "to",
+                  "value": "ANALISE"
+                }
+              ]
+            },
+            "description": "Verifica se uma transição entre duas fases é válida"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cenários Completos",
+      "item": [
+        {
+          "name": "Cenário: Suporte Técnico Completo",
+          "item": [
+            {
+              "name": "1. Criar Flow de Suporte",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('flowId', pm.response.json().id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-API-Key",
+                    "value": "{{apiKey}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Suporte - Cliente #99999\",\n  \"description\": \"Problema de login após atualização\",\n  \"initialPhase\": \"TRIAGEM\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/flows",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "flows"]
+                }
+              }
+            },
+            {
+              "name": "2. Configurar Fase TRIAGEM",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-API-Key",
+                    "value": "{{apiKey}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"variables\": {\n    \"cliente_id\": \"99999\",\n    \"problema\": \"login_falha\"\n  },\n  \"toolPolicy\": {\n    \"allow\": [\"database\"]\n  },\n  \"systemPromptTemplate\": \"Classifique o problema de login do cliente {{cliente_id}}.\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/flows/{{flowId}}/phases/TRIAGEM",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "flows", "{{flowId}}", "phases", "TRIAGEM"]
+                }
+              }
+            },
+            {
+              "name": "3. Executar Task de Triagem",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-API-Key",
+                    "value": "{{apiKey}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"prompt\": \"Cliente não consegue fazer login. Erro: 'credenciais inválidas'. Histórico mostra 3 tentativas falhadas.\",\n  \"mode\": \"AUTONOMOUS\",\n  \"flowId\": \"{{flowId}}\",\n  \"sync\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/tasks",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "tasks"]
+                }
+              }
+            },
+            {
+              "name": "4. Avançar para ANALISE",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-API-Key",
+                    "value": "{{apiKey}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"to\": \"ANALISE\",\n  \"guardVars\": {\n    \"classificacao\": \"problema_senha\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/flows/{{flowId}}:advance",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "flows", "{{flowId}}:advance"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
