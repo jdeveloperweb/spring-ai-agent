@@ -30,6 +30,37 @@ services:
       timeout: 3s
       retries: 5
 
+  # SSH Tunnel para Firebird
+  ssh-tunnel:
+    image: kroniak/ssh-client:latest
+    command: >
+      sh -c "
+        mkdir -p /root/.ssh &&
+        echo -e '$${SSH_PRIVATE_KEY}' > /root/.ssh/id_rsa &&
+        chmod 600 /root/.ssh/id_rsa &&
+        echo 'StrictHostKeyChecking no' > /root/.ssh/config &&
+        echo 'UserKnownHostsFile /dev/null' >> /root/.ssh/config &&
+        chmod 600 /root/.ssh/config &&
+        echo 'Iniciando túnel SSH...' &&
+        ssh -v -N -L 0.0.0.0:3050:$${FIREBIRD_REMOTE_HOST}:$${FIREBIRD_REMOTE_PORT} $${SSH_USER}@$${SSH_HOST} -p $${SSH_PORT}
+      "
+    ports:
+      - "${FIREBIRD_LOCAL_PORT:-3050}:3050"
+    environment:
+      SSH_HOST: ${SSH_HOST}
+      SSH_PORT: ${SSH_PORT:-22}
+      SSH_USER: ${SSH_USER}
+      SSH_PRIVATE_KEY: ${SSH_PRIVATE_KEY}
+      FIREBIRD_REMOTE_HOST: ${FIREBIRD_REMOTE_HOST:-localhost}
+      FIREBIRD_REMOTE_PORT: ${FIREBIRD_REMOTE_PORT:-3050}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3050"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   app:
     build:
       context: .
@@ -42,11 +73,17 @@ services:
       DATABASE_PASS: agent_pass
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SPRING_PROFILES_ACTIVE: docker
+      # Firebird SCCI (via túnel SSH)
+      SPRING_DATASOURCE_FIREBIRD_URL: jdbc:firebirdsql://ssh-tunnel:3050/${FIREBIRD_DATABASE_PATH}
+      SPRING_DATASOURCE_FIREBIRD_USERNAME: ${FIREBIRD_USER:-sysdba}
+      SPRING_DATASOURCE_FIREBIRD_PASSWORD: ${FIREBIRD_PASSWORD:-masterkey}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ssh-tunnel:
+        condition: service_started
     volumes:
       - agent_files:/tmp/agent-files
     healthcheck:

@@ -67,6 +67,20 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
+        <!-- Firebird Database -->
+        <dependency>
+            <groupId>org.firebirdsql.jdbc</groupId>
+            <artifactId>jaybird</artifactId>
+            <version>5.0.3.java11</version>
+        </dependency>
+
+        <!-- SSH Tunnel Support -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+        </dependency>
+
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
